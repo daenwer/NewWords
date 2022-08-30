@@ -1,0 +1,8 @@
+.idea
+NewWords/private_settings.py
+node_modules/
+db.sqlite3
+NewWords/media/
+venv/
+*.pyc
+logs/
