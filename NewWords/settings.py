@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.middlewares.TokenMiddleware',
 ]
 
 ROOT_URLCONF = 'NewWords.urls'
@@ -114,6 +115,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'app.User'
+
+TOKEN_WORKING_TIME = 60 * 60 * 24
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

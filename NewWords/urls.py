@@ -16,8 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from app.views import TokenVerification
+
+# app_name = "app"
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
+    path('login/<str:token>/', TokenVerification.as_view(), name='token'),
+
     # path('admin/', site.urls),
 ]

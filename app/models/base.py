@@ -1,53 +1,8 @@
 from datetime import date
+from django.utils import timezone
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-
-class UserQuerySet(models.query.QuerySet):
-    def get_or_create(self, defaults=None, **kwargs):
-        message = kwargs['message']
-        user = User.objects.filter(
-            telegram_chat_id=message.chat.id
-        )
-        if user:
-            save = False
-            user = user[0]
-            if not user.is_active:
-                user.is_active = True
-                save = True
-            if user.first_name != message.chat.first_name:
-                user.first_name = message.chat.first_name
-                save = True
-            if user.last_name != message.chat.last_name:
-                user.last_name = message.chat.last_name
-                save = True
-            if user.username != message.chat.username:
-                user.username = message.chat.username
-                save = True
-            if save:
-                user.refresh_from_db()
-        else:
-            user_schedule = UserSchedule.objects.create()
-            user = User.objects.create(
-                telegram_chat_id=message.chat.id,
-                username=message.chat.username,
-                first_name=message.chat.first_name,
-                last_name=message.chat.last_name,
-                user_schedule=user_schedule,
-            )
-        return user
-
-
-class UserManager(models.Manager):
-    def get_queryset(self):
-        return UserQuerySet(self.model)
-
-    def create_user(self, *args, **kwargs):
-        return super().create_user(*args, **kwargs)
-
-    def create_superuser(self, *args, **kwargs):
-        return super().create_superuser(*args, **kwargs)
 
 
 class UserSchedule(models.Model):
@@ -61,33 +16,34 @@ class UserSchedule(models.Model):
             if hasattr(self, 'user') else 'Settings'
         )
 
-    start_time = models.TimeField(default='9:00')
+    start_time = models.TimeField(default='10:00')
+    finish_time = models.TimeField(default='23:00')
     repetition_1 = models.IntegerField(
-        default=3600, verbose_name='First repetition'
+        default=60*60, verbose_name='First repetition'
     )
     repetition_2 = models.IntegerField(
-        default=28800, verbose_name='Second repetition'
+        default=60*60*8, verbose_name='Second repetition'
     )
     repetition_3 = models.IntegerField(
-        default=86400, verbose_name='Third repetition'
+        default=60*60*24, verbose_name='Third repetition'
     )
     repetition_4 = models.IntegerField(
-        default=259200, verbose_name='Fourth repetition'
+        default=60*60*24*3, verbose_name='Fourth repetition'
     )
     repetition_5 = models.IntegerField(
-        default=604800, verbose_name='Fifth repetition'
+        default=60*60*24*7, verbose_name='Fifth repetition'
     )
     repetition_6 = models.IntegerField(
-        default=1814400, verbose_name='Sixth repetition'
+        default=60*60*24*21, verbose_name='Sixth repetition'
     )
     repetition_7 = models.IntegerField(
-        default=7776000, verbose_name='Seventh repetition'
+        default=60*60*24*90, verbose_name='Seventh repetition'
     )
     repetition_8 = models.IntegerField(
-        default=15552000, verbose_name='Eighth repetition'
+        default=60*60*24*180, verbose_name='Eighth repetition'
     )
     repetition_9 = models.IntegerField(
-        default=31104000, verbose_name='Ninth repetition'
+        default=60*60*24*360, verbose_name='Ninth repetition'
     )
 
 
@@ -96,17 +52,26 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = "Users"
 
-    objects = UserManager()
-
     def __str__(self):
         return f'{self.full_name} ({self.username})'
 
-    telegram_chat_id = models.IntegerField(verbose_name='ID Telegram chat')
-
+    telegram_chat_id = models.IntegerField(
+        verbose_name='ID Telegram chat', null=True, blank=True
+    )
     user_schedule = models.ForeignKey(
         UserSchedule, verbose_name='UserSchedule', related_name='user_schedule',
         on_delete=models.CASCADE, null=True, blank=True
     )
+    first_name = models.CharField(
+        verbose_name='first name', max_length=150, blank=True, null=True
+    )
+    last_name = models.CharField(
+        verbose_name='last name', max_length=150, blank=True, null=True
+    )
+    token = models.UUIDField(
+        verbose_name='token', blank=True, null=True, unique=True
+    )
+    date_create_token = models.DateTimeField(null=True, blank=True)
 
     @property
     def full_name(self):

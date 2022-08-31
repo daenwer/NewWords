@@ -1,18 +1,46 @@
 from asgiref.sync import sync_to_async
 
 from app.models import User
-from app.models.base import Phrase, UserPhrase
+from app.models.base import Phrase, UserPhrase, UserSchedule
+
+from django.contrib.auth import login
+
+
 # from app.tasks import setup_periodic_tasks
 
 
 @sync_to_async
-def _user_get_or_create(message):
-    return User.objects.get_or_create(message=message)
+def _save(user):
+    user.save()
+
+
+@sync_to_async
+def _get_or_create_user(message):
+    user = User.objects.filter(telegram_chat_id=message.chat.id)
+    if user:
+        user = user[0]
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+            user.refresh_from_db()
+    else:
+        user_schedule = UserSchedule.objects.create()
+        user = User.objects.create(
+            telegram_chat_id=message.chat.id,
+            username=message.chat.username,
+            first_name=message.chat.first_name,
+            last_name=message.chat.last_name,
+            user_schedule=user_schedule,
+            is_staff=True,
+        )
+    return user
 
 
 @sync_to_async
 def _get_user(chat_id):
-    return User.objects.get(telegram_chat_id=chat_id)
+    return User.objects.filter(
+        telegram_chat_id=chat_id, is_active=True
+    ).first()
 
 
 @sync_to_async

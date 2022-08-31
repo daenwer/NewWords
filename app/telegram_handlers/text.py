@@ -2,10 +2,12 @@ from asyncio import sleep
 
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
 
-from app.telegram_handlers.sync_with_async import add_new_phrase
+from app.telegram_handlers.sync_with_async import (
+    add_new_phrase, _get_user, _save
+)
 from app.management.commands.bot import bot, dp
-from app.telegram_handlers.sync_with_async import _user_get_or_create
 
 inline_btn_delete = InlineKeyboardButton('delete', callback_data='delete')
 inline_btn_add = InlineKeyboardButton('add', callback_data='add')
@@ -16,29 +18,39 @@ inline_kb_full = InlineKeyboardMarkup(row_width=2).add(
 
 @dp.message_handler()
 async def text_command(message: types.Message):
-    await _user_get_or_create(message)
-    text_message = (
-        message.text
-    )
+    text_message = message.text
+
     if len(message.text) < 511:
-        new_message = await bot.send_message(
-            message.chat.id, text_message, reply_markup=inline_kb_full
-        )
+        args = (message.chat.id, text_message)
+        kwargs = {'reply_markup': inline_kb_full}
     else:
-        new_message = await bot.send_message(
+        args = (
             message.chat.id,
             'The phrase must not be longer than 512 characters!'
         )
+        kwargs = {}
+
+    disable_user = False
+    try:
+        new_message = await bot.send_message(*args, **kwargs)
+    except BotBlocked:
+        disable_user = True
+
     await bot.delete_message(
         chat_id=message.chat.id, message_id=message.message_id
     )
+    if disable_user:
+        user = await _get_user(message.chat.id)
+        user.is_active = False
+        await _save(user)
+        return
+
     await sleep(60)
     try:
         await bot.delete_message(
             chat_id=new_message.chat.id, message_id=new_message.message_id
         )
-    # TODO: Exception
-    except:
+    except MessageToDeleteNotFound:
         pass
 
 
