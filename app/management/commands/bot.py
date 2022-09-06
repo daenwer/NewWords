@@ -5,10 +5,6 @@ from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 
-# import tracemalloc
-#
-# tracemalloc.start()
-
 
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher(bot)

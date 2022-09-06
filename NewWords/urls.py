@@ -16,13 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from app.views import TokenVerification
+from app.views import TokenVerificationView, ForTestView
 
 # app_name = "app"
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
-    path('login/<str:token>/', TokenVerification.as_view(), name='token'),
+    # path('admin/', ForTestView.as_view(), name='admin'),
+    path('login/<str:token>/', TokenVerificationView.as_view(), name='token'),
 
     # path('admin/', site.urls),
 ]

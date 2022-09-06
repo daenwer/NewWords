@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.utils.exceptions import BotBlocked
 
 from app.management.commands.bot import bot, dp
-from app.telegram_handlers.sync_with_async import _get_user, _save
+from app.telegram_handlers.sync_async import _get_user, _save
 
 
 @dp.message_handler(commands=['help'])

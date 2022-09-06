@@ -1,12 +1,10 @@
+import datetime
+from datetime import timedelta
+
 from asgiref.sync import sync_to_async
 
 from app.models import User
-from app.models.base import Phrase, UserPhrase, UserSchedule
-
-from django.contrib.auth import login
-
-
-# from app.tasks import setup_periodic_tasks
+from app.models.base import Phrase, UserPhrase, UserSchedule, RepeatSchedule
 
 
 @sync_to_async
@@ -67,6 +65,20 @@ def _create_user_phrase(base_phrase, user):
     return UserPhrase.objects.create(base_phrase=base_phrase, user=user)
 
 
+@sync_to_async
+def _create_repeat_schedule(user, user_phrase):
+    next_repeat = (
+        datetime.datetime.now() +
+        datetime.timedelta(seconds=user.user_schedule.repetition_1)
+    )
+    repeat_schedule = (True, *user_phrase.repeat_schedule['schedule'][1:])
+    user_phrase.repeat_schedule['schedule'] = repeat_schedule
+    user_phrase.save()
+    RepeatSchedule.objects.create(
+        user=user, user_phrase=user_phrase, next_repeat=next_repeat
+    )
+
+
 async def add_new_phrase(message):
     chat_id = message.from_user.id
     text = message.message.text
@@ -81,6 +93,7 @@ async def add_new_phrase(message):
     user_phrase = await _get_user_phrase(phrase, user)
     if not user_phrase:
         user_phrase = await _create_user_phrase(phrase, user)
+        await _create_repeat_schedule(user=user, user_phrase=user_phrase)
         # # TODO: добавить в задачи для выполнения через первый промежуток
         # UserPhrase.save()
     else:

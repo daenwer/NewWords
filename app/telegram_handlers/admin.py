@@ -1,12 +1,11 @@
 import uuid
+import datetime
 
 from aiogram import types
 from aiogram.utils.exceptions import BotBlocked
-from django.utils import timezone
 
+from app.telegram_handlers.sync_async import _get_user, _save
 from app.management.commands.bot import bot, dp
-from app.telegram_handlers.sync_with_async import _get_user, _save
-from app.management.commands.bot import bot
 
 from django.contrib.auth import login
 
@@ -16,7 +15,7 @@ async def admin_command(message: types.Message):
     user = await _get_user(message.chat.id)
     if user:
         user.token = uuid.uuid4()
-        user.date_create_token = timezone.now()
+        user.date_create_token = datetime.datetime.now()
         await _save(user)
         text_message = (
             # TODO: ссылка на урл с токеном сначала дописать)))

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
+import datetime
 import os
 from pathlib import Path
 
@@ -24,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 SITE_URL = 'localhost:8000'
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app.apps.AppConfig',
+    # 'django_celery_beat',
 ]
 
 
@@ -94,7 +96,12 @@ BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = BROKER_URL
 CELERY_DEFAULT_QUEUE = 'words'
+# CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+# CELERY_BEAT_SCHEDULER_CHECK = 60
 
+# Time for update app
+SLEEP_START_TIME = datetime.time()
+SLEEP_END_TIME = datetime.time(2)
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -150,5 +157,3 @@ TELEGRAM_TOKEN = ''
 
 
 from NewWords.private_settings import *
-
-# bot = TeleBot(TELEGRAM_TOKEN, threaded=False)

@@ -4,7 +4,7 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
 
-from app.telegram_handlers.sync_with_async import (
+from app.telegram_handlers.sync_async import (
     add_new_phrase, _get_user, _save
 )
 from app.management.commands.bot import bot, dp
