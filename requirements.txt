@@ -1,4 +1,4 @@
-aiogram==2.22.1
+aiogram
 aiohttp==3.8.1
 aiosignal==1.2.0
 amqp==5.1.1
