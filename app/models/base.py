@@ -1,5 +1,4 @@
 from datetime import date
-from django.utils import timezone
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -18,31 +17,31 @@ class UserSchedule(models.Model):
 
     start_time = models.TimeField(default='10:00')
     finish_time = models.TimeField(default='23:00')
-    repetition_1 = models.IntegerField(
+    repetition_0 = models.IntegerField(
         default=60*60, verbose_name='First repetition'
     )
-    repetition_2 = models.IntegerField(
+    repetition_1 = models.IntegerField(
         default=60*60*8, verbose_name='Second repetition'
     )
-    repetition_3 = models.IntegerField(
+    repetition_2 = models.IntegerField(
         default=60*60*24, verbose_name='Third repetition'
     )
-    repetition_4 = models.IntegerField(
+    repetition_3 = models.IntegerField(
         default=60*60*24*3, verbose_name='Fourth repetition'
     )
-    repetition_5 = models.IntegerField(
+    repetition_4 = models.IntegerField(
         default=60*60*24*7, verbose_name='Fifth repetition'
     )
-    repetition_6 = models.IntegerField(
+    repetition_5 = models.IntegerField(
         default=60*60*24*21, verbose_name='Sixth repetition'
     )
-    repetition_7 = models.IntegerField(
+    repetition_6 = models.IntegerField(
         default=60*60*24*90, verbose_name='Seventh repetition'
     )
-    repetition_8 = models.IntegerField(
+    repetition_7 = models.IntegerField(
         default=60*60*24*180, verbose_name='Eighth repetition'
     )
-    repetition_9 = models.IntegerField(
+    repetition_8 = models.IntegerField(
         default=60*60*24*360, verbose_name='Ninth repetition'
     )
 
@@ -118,4 +117,18 @@ class UserPhrase(models.Model):
         verbose_name='Next repetition'
     )
     repeat_schedule = models.JSONField(default=schedule_default)
-    in_work = models.BooleanField(default=False)
+
+
+class RepeatSchedule(models.Model):
+    class Meta:
+        verbose_name = 'User phrase'
+        verbose_name_plural = 'User phrases'
+
+    next_repeat = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='repeat_user'
+    )
+    user_phrase = models.ForeignKey(
+        UserPhrase, on_delete=models.CASCADE, related_name='user_phrase'
+    )
+    is_active = models.BooleanField(default=True)

@@ -1,42 +1,75 @@
-from celery.schedules import crontab
+import datetime
 from NewWords.celery import app
+from app.models.base import RepeatSchedule
+from app.telegram_handlers.send_message import send_message
+
 
 @app.task
-def func():
-    print('Hello world!')
+def prepare_new_celery_tasks():
+    current_datetime = datetime.datetime.now()
+    current_task = RepeatSchedule.objects.filter(
+        is_active=True, next_repeat__lte=current_datetime
+    )
+    for task in current_task:
+        create_new_celery_task.delay(task.id)
+        # create_new_celery_task(task.id)
 
-#
-# @app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     # Calls test('hello') every 10 seconds.
-#     sender.add_periodic_task(10.0, test.s('hello'), name='add every 10')
-#
-#     # Calls test('world') every 30 seconds
-#     sender.add_periodic_task(30.0, test.s('world'), expires=10)
-#
-#     # Executes every Monday morning at 7:30 a.m.
-#     sender.add_periodic_task(
-#         crontab(hour=7, minute=30, day_of_week=1),
-#         test.s('Happy Mondays!'),
-#     )
-#
-#
-# @app.task
-# def test(arg):
-#     print(arg)
-#
-#
-# @app.task
-# def add(x, y):
-#     z = x + y
-#     print(z)
-#
-#
-# app.conf.beat_schedule = {
-#     'add-every-10-seconds': {
-#         'task': 'tasks.add',
-#         'schedule': 10.0,
-#         'args': (16, 16)
-#     },
-# }
-# app.conf.timezone = 'UTC'
+
+@app.task
+def create_new_celery_task(task_id):
+    task = RepeatSchedule.objects.filter(id=task_id).first()
+
+    if not task.user.is_active:
+        return
+
+    send_message(task.user.telegram_chat_id, task.user_phrase.base_phrase.value)
+
+    try:
+        next_step_repeat = (
+            task.user_phrase.repeat_schedule['schedule'].index(False)
+        )
+    except ValueError:
+        next_step_repeat = None
+
+    if not next_step_repeat:
+        task.is_active = False
+        task.save()
+        return
+
+    # TODO: может удалять вместо остановки?
+    task.user_phrase.repeat_schedule['schedule'][next_step_repeat] = True
+    task.user_phrase.save()
+
+    next_time_interval = task.user.user_schedule.__getattribute__(
+        f'repetition_{next_step_repeat}'
+    )
+    current_datetime = datetime.datetime.now()
+    next_datetime_repeat = (
+        current_datetime + datetime.timedelta(seconds=next_time_interval)
+    )
+    lately_today = datetime.datetime(
+        year=current_datetime.year,
+        month=current_datetime.month,
+        day=current_datetime.day,
+        hour=task.user.user_schedule.finish_time.hour,
+        minute=task.user.user_schedule.finish_time.minute
+    )
+
+    if next_datetime_repeat <= lately_today:
+        hour = next_datetime_repeat.hour
+        minute = next_datetime_repeat.minute
+    else:
+        if next_datetime_repeat.date() == lately_today.date():
+            next_datetime_repeat += datetime.timedelta(days=1)
+        hour = task.user.user_schedule.start_time.hour
+        minute = task.user.user_schedule.start_time.minute
+
+    user_next_datetime_repeat = datetime.datetime(
+        year=next_datetime_repeat.year,
+        month=next_datetime_repeat.month,
+        day=next_datetime_repeat.day,
+        hour=hour,
+        minute=minute,
+    )
+    task.next_repeat = user_next_datetime_repeat
+    task.save()

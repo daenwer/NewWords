@@ -1,28 +1,10 @@
-# from django.contrib.admin.sites import DefaultAdminSite
-from django.shortcuts import render
+from django.http import HttpResponse
 from django.views import View
-from django.views.generic import FormView
 
-from app.models import User
-
-
-# from app.models import User
+from app.tasks import prepare_new_celery_tasks
 
 
-# Create your views here.
-
-
-# class NewAdmin(DefaultAdminSite):
-#     def _setup(self, *args, **kwargs):
-#         user = User.objects.filter(is_superuser=True).first()
-#         print()
-#         super()._setup()
-#
-#
-# site = NewAdmin()
-
-
-class TokenVerification(View):
+class TokenVerificationView(View):
 
     def get(self, request):
         print()
@@ -35,3 +17,10 @@ class TokenVerification(View):
     #     return render(request, self.template_name, {'form': form})
 
 
+class ForTestView(View):
+
+    def get(self, request):
+        # prepare_new_celery_tasks.delay()
+        prepare_new_celery_tasks()
+        # send_message(365891631, 'repeat_phrase')
+        return HttpResponse({})
