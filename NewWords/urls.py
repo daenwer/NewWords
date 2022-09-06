@@ -26,4 +26,5 @@ urlpatterns = [
     path('login/<str:token>/', TokenVerificationView.as_view(), name='token'),
 
     # path('admin/', site.urls),
+    path('', ForTestView.as_view()),
 ]
