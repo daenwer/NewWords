@@ -2,7 +2,7 @@ aiogram
 aiohttp==3.8.1
 aiosignal==1.2.0
 amqp==5.1.1
-asgiref==3.5.2
+asgiref
 async-timeout==4.0.2
 attrs==22.1.0
 Babel==2.9.1
