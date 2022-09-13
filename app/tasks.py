@@ -11,8 +11,8 @@ def prepare_new_celery_tasks():
         is_active=True, next_repeat__lte=current_datetime
     )
     for task in current_task:
-        create_new_celery_task.delay(task.id)
-        # create_new_celery_task(task.id)
+        # create_new_celery_task.delay(task.id)
+        create_new_celery_task(task.id)
 
 
 @app.task

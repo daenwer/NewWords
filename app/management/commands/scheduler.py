@@ -11,13 +11,10 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         while True:
             current_datetime = datetime.datetime.now()
+            sleep(60)
 
             if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
-                sleep(60)
                 continue
 
-            prepare_new_celery_tasks.delay()
-            # prepare_new_celery_tasks()
-
-
-
+            # prepare_new_celery_tasks.delay()
+            prepare_new_celery_tasks()
