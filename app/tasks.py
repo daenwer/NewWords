@@ -7,10 +7,10 @@ from app.telegram_handlers.send_message import send_message
 @app.task
 def prepare_new_celery_tasks():
     current_datetime = datetime.datetime.now()
-    current_task = RepeatSchedule.objects.filter(
+    current_tasks = RepeatSchedule.objects.filter(
         is_active=True, next_repeat__lte=current_datetime
     )
-    for task in current_task:
+    for task in current_tasks:
         # create_new_celery_task.delay(task.id)
         create_new_celery_task(task.id)
 

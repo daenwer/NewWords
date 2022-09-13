@@ -69,7 +69,7 @@ def _create_user_phrase(base_phrase, user):
 def _create_repeat_schedule(user, user_phrase):
     next_repeat = (
         datetime.datetime.now() +
-        datetime.timedelta(seconds=user.user_schedule.repetition_1)
+        datetime.timedelta(seconds=user.user_schedule.repetition_0)
     )
     repeat_schedule = (True, *user_phrase.repeat_schedule['schedule'][1:])
     user_phrase.repeat_schedule['schedule'] = repeat_schedule

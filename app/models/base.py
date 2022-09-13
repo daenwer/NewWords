@@ -112,10 +112,6 @@ class UserPhrase(models.Model):
     base_phrase = models.ForeignKey(
         Phrase, on_delete=models.CASCADE, related_name='phrase'
     )
-    next_repetition = models.DateField(
-        default=date.today,
-        verbose_name='Next repetition'
-    )
     repeat_schedule = models.JSONField(default=schedule_default)
 
 

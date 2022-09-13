@@ -57,7 +57,10 @@ async def text_command(message: types.Message):
 @dp.callback_query_handler(lambda c: c.data == 'delete')
 async def process_callback_delete(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
-    await callback_query.message.delete()
+    try:
+        await callback_query.message.delete()
+    except:
+        pass
 
 
 @dp.callback_query_handler(lambda c: c.data == 'add')

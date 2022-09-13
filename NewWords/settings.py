@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'app.User'
 
-TOKEN_WORKING_TIME = 60 * 60 * 24
+# TOKEN_WORKING_TIME = 60 * 60 * 24
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
