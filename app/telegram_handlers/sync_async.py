@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 
 from app.models import User
 from app.models.base import Phrase, UserPhrase, UserSchedule, RepeatSchedule
+from app.tasks import download_pronunciation_task
 
 
 @sync_to_async
@@ -57,7 +58,10 @@ def _get_user_phrase(record, user):
 
 @sync_to_async
 def _create_phrase(phrase, user):
-    return Phrase.objects.create(value=phrase, user=user)
+    new_phrase = Phrase.objects.create(value=phrase, user=user)
+    download_pronunciation_task.delay(new_phrase.id)
+    # download_pronunciation_task(phrase)
+    return new_phrase
 
 
 @sync_to_async
@@ -81,9 +85,11 @@ def _create_repeat_schedule(user, user_phrase):
 
 async def add_new_phrase(message):
     chat_id = message.from_user.id
-    text = message.message.text
     user = await _get_user(chat_id)
 
+    text = message.message.text.strip()
+    while '  ' in text:
+        text = text.replace('  ', ' ')
     phrase = await _get_phrase(text)
     if not phrase:
         if len(text) > 511:
@@ -94,8 +100,34 @@ async def add_new_phrase(message):
     if not user_phrase:
         user_phrase = await _create_user_phrase(phrase, user)
         await _create_repeat_schedule(user=user, user_phrase=user_phrase)
-        # # TODO: добавить в задачи для выполнения через первый промежуток
-        # UserPhrase.save()
+
+
+@sync_to_async
+def update_phrase(callback):
+    user = User.objects.filter(
+        telegram_chat_id=callback.message.chat.id, is_active=True
+    ).first()
+    old_phrase = callback.message.text.split('\n')[1].strip()
+    new_phrase = callback.message.text.split('\n')[3].strip()
+    old_app_phrase = Phrase.objects.filter(value=old_phrase).first()
+    new_app_phrase = Phrase.objects.filter(value=new_phrase).first()
+    user_phrase = UserPhrase.objects.filter(base_phrase=old_app_phrase).first()
+    is_used = UserPhrase.objects.exclude(user=user).filter(
+        base_phrase_id=old_app_phrase.id
+    ).exists()
+
+    if not is_used:
+        if not new_app_phrase:
+            old_app_phrase.value = new_app_phrase
+            old_app_phrase.pronunciation = None
+            old_app_phrase.save()
+            download_pronunciation_task(old_app_phrase.id)
+        else:
+            user_phrase.base_phrase = new_app_phrase
+            user_phrase.save()
     else:
-        print('повтор!!!!!!!!!!!!!!!!!!')
-        # TODO: дописать логику при повторении, скинуть еще кнопки и уточнить
+        phrase = Phrase.objects.create(value=new_phrase, user=user)
+        user_phrase.base_phrase = phrase
+        user_phrase.save()
+        download_pronunciation_task.delay(phrase.id)
+        # download_pronunciation_task(phrase)

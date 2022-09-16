@@ -18,6 +18,10 @@ inline_kb_full = InlineKeyboardMarkup(row_width=2).add(
 
 @dp.message_handler()
 async def text_command(message: types.Message):
+
+    if message.reply_to_message:
+        return
+
     text_message = message.text
 
     if len(message.text) < 511:
@@ -68,7 +72,12 @@ async def process_callback_delete(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
     await add_new_phrase(callback_query)
-    await callback_query.message.delete()
+
+    try:
+        await callback_query.message.delete()
+    except:
+        pass
+
     await bot.send_message(
         callback_query.from_user.id, f'Added -> {callback_query.message.text}'
     )

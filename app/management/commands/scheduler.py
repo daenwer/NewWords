@@ -16,5 +16,5 @@ class Command(BaseCommand):
             if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
                 continue
 
-            # prepare_new_celery_tasks.delay()
-            prepare_new_celery_tasks()
+            prepare_new_celery_tasks.delay()
+            # prepare_new_celery_tasks()
