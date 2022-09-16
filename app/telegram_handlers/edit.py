@@ -28,10 +28,10 @@ inline_kb_full = InlineKeyboardMarkup(row_width=2).add(
 
 @dp.message_handler(commands=['edit'])
 async def edit_command(message: types.Message):
-    # TODO: составить сообщение со старым и новым и спросить удалить или изменить
-    #  после замены проверить отличаются сообщения или нет, если да то проверить базовую фразу
-    #  если она только у одного человека то ее заменить, удалить аудио и запустить скачивание аудио
-    #  если не у одного то добавить новую заменить ссылку у юзера на новую
+
+    if not message.reply_to_message:
+        return
+
     old_phrase = message.reply_to_message.html_text
     if 'Added -&gt;' in old_phrase:
         old_phrase = old_phrase.split('Added -&gt;')[1].strip()
