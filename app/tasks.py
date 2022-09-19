@@ -83,15 +83,15 @@ def download_pronunciation_task(phrase_id):
     if phrase.pronunciation:
         return
 
-    # try:
-    text = phrase.value.replace(' ', '%20')
-    # USA - 0; UK - 1
-    url = f'http://dict.youdao.com/dictvoice?type=0&audio={text}'
-    file_path = os.path.join(
-        BASE_DIR, 'app', 'static', 'audio', f'{phrase.id}.mp3'
-    )
-    urllib.request.urlretrieve(url, filename=file_path)
-    phrase.pronunciation = f'{phrase.id}.mp3'
-    phrase.save()
-    # except:
-    #     pass
+    try:
+        text = phrase.value.replace(' ', '%20')
+        # USA - 0; UK - 1
+        url = f'http://dict.youdao.com/dictvoice?type=0&audio={text}'
+        file_path = os.path.join(
+            BASE_DIR, 'app', 'static', 'audio', f'{phrase.id}.mp3'
+        )
+        urllib.request.urlretrieve(url, filename=file_path)
+        phrase.pronunciation = f'{phrase.id}.mp3'
+        phrase.save()
+    except:
+        pass

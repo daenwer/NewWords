@@ -1,3 +1,4 @@
+import re
 from asyncio import sleep
 
 from aiogram import types
@@ -24,13 +25,21 @@ async def text_command(message: types.Message):
 
     text_message = message.text
 
-    if len(message.text) < 511:
+    is_allowed = not bool(re.search(r'[^a-zA-Z.,:/!?]', text_message))
+
+    if len(message.text) < 511 and is_allowed:
         args = (message.chat.id, text_message)
         kwargs = {'reply_markup': inline_kb_full}
-    else:
+    elif len(message.text) > 511:
         args = (
             message.chat.id,
             'The phrase must not be longer than 512 characters!'
+        )
+        kwargs = {}
+    elif not is_allowed:
+        args = (
+            message.chat.id,
+            'Phrases can only consist of English letters and contain .,:/!?'
         )
         kwargs = {}
 
