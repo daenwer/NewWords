@@ -18,15 +18,11 @@ import re
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import re_path
 from django.views.static import serve
 
-
 from NewWords import settings
-from app.views import TokenVerificationView, ForTestView
 
-# app_name = "app"
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
