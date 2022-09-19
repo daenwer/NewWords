@@ -15,15 +15,16 @@ def create_new_celery_task(task_id):
     if not task.user.is_active:
         return
 
+    if not task.user_phrase.base_phrase.pronunciation:
+        # download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
+        download_pronunciation_task(task.user_phrase.base_phrase.id)
+        task.refresh_from_db()
+
     send_message(
         task.user.telegram_chat_id,
         task.user_phrase.base_phrase.value,
         task.user_phrase.base_phrase.pronunciation
     )
-
-    if not task.user_phrase.base_phrase.pronunciation:
-        # download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
-        download_pronunciation_task(task.user_phrase.base_phrase.id)
 
     try:
         next_step_repeat = (

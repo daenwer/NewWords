@@ -11,8 +11,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         while True:
+            sleep(60)
             current_datetime = datetime.datetime.now()
-            sleep(10)
 
             if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
                 continue
