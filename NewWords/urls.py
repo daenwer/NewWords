@@ -30,11 +30,6 @@ from app.views import TokenVerificationView, ForTestView
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
-    # path('admin/', ForTestView.as_view(), name='admin'),
-    path('login/<str:token>/', TokenVerificationView.as_view(), name='token'),
-
-    # path('admin/', site.urls),
-    path('', ForTestView.as_view()),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
