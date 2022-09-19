@@ -14,8 +14,8 @@ class Command(BaseCommand):
             sleep(60)
             current_datetime = datetime.datetime.now()
 
-            if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
-                continue
+            # if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
+            #     continue
 
             current_tasks = RepeatSchedule.objects.filter(
                 is_active=True, next_repeat__lte=current_datetime
