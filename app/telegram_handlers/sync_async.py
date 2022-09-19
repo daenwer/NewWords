@@ -60,7 +60,7 @@ def _get_user_phrase(record, user):
 def _create_phrase(phrase, user):
     new_phrase = Phrase.objects.create(value=phrase, user=user)
     # download_pronunciation_task.delay(new_phrase.id)
-    download_pronunciation_task(phrase)
+    download_pronunciation_task(new_phrase.id)
     return new_phrase
 
 
@@ -130,4 +130,4 @@ def update_phrase(callback):
         user_phrase.base_phrase = phrase
         user_phrase.save()
         # download_pronunciation_task.delay(phrase.id)
-        download_pronunciation_task(phrase)
+        download_pronunciation_task(phrase.id)
