@@ -1,8 +1,6 @@
 from django.http import HttpResponse
 from django.views import View
 
-from app.tasks import prepare_new_celery_tasks
-
 
 class TokenVerificationView(View):
 
