@@ -117,8 +117,8 @@ class UserPhrase(models.Model):
 
 class RepeatSchedule(models.Model):
     class Meta:
-        verbose_name = 'User phrase'
-        verbose_name_plural = 'User phrases'
+        verbose_name = 'Repeat schedule'
+        verbose_name_plural = 'Repeat scheduler'
 
     next_repeat = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(
