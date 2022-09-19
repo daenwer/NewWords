@@ -22,7 +22,8 @@ def create_new_celery_task(task_id):
     )
 
     if not task.user_phrase.base_phrase.pronunciation:
-        download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
+        # download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
+        download_pronunciation_task(task.user_phrase.base_phrase.id)
 
     try:
         next_step_repeat = (

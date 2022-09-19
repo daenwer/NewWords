@@ -21,4 +21,4 @@
 #         # prepare_new_celery_tasks.delay()
 #         # prepare_new_celery_tasks()
 #         # send_message(365891631, 'repeat_phrase')
-#         return HttpResponse({'test test test test for me'})
+#         return HttpResponse({''})
