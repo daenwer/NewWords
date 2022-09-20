@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -11,8 +9,8 @@ class UserSchedule(models.Model):
 
     def __str__(self):
         return (
-            f'Settings for {self.user.full_name}'
-            if hasattr(self, 'user') else 'Settings'
+            f'Settings for {self.user_schedule.get().username}'
+            if hasattr(self, 'user_schedule') else 'Settings'
         )
 
     start_time = models.TimeField(default='10:00')
@@ -92,6 +90,11 @@ class Phrase(models.Model):
         User, on_delete=models.CASCADE, related_name='creator'
     )
 
+    def __str__(self):
+        return '{} / {} / {}'.format(
+            self.user.username, self.value, self.pronunciation
+        )
+
 
 def schedule_default():
     return {
@@ -114,6 +117,11 @@ class UserPhrase(models.Model):
     )
     repeat_schedule = models.JSONField(default=schedule_default)
 
+    def __str__(self):
+        return '{} / {}'.format(
+            self.user.username, self.base_phrase.value
+        )
+
 
 class RepeatSchedule(models.Model):
     class Meta:
@@ -128,3 +136,12 @@ class RepeatSchedule(models.Model):
         UserPhrase, on_delete=models.CASCADE, related_name='user_phrase'
     )
     is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return '{} / {} / {}'.format(
+            self.user.username,
+            self.user_phrase.base_phrase.value,
+            f'{self.next_repeat.date()} '
+            f'{self.next_repeat.time().hour}:'
+            f'{self.next_repeat.time().minute}'
+        )
