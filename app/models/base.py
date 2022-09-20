@@ -9,7 +9,7 @@ class UserSchedule(models.Model):
 
     def __str__(self):
         return (
-            f'Settings for {self.user_schedule.get().username}'
+            f'Settings for {self.user.get().username}'
             if hasattr(self, 'user_schedule') else 'Settings'
         )
 
@@ -56,7 +56,7 @@ class User(AbstractUser):
         verbose_name='ID Telegram chat', null=True, blank=True
     )
     user_schedule = models.ForeignKey(
-        UserSchedule, verbose_name='UserSchedule', related_name='user_schedule',
+        UserSchedule, verbose_name='UserSchedule', related_name='user',
         on_delete=models.CASCADE, null=True, blank=True
     )
     first_name = models.CharField(
