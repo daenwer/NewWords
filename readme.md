@@ -14,3 +14,9 @@ cp /root/NewWords/configs/prod.conf /etc/supervisor/conf.d/prod.conf
 
 supervisorctl reread
 supervisorctl update
+
+git restore logs/scheduler.log.error
+
+service supervisor restart
+
+service supervisor restart <name>

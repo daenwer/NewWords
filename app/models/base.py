@@ -8,7 +8,8 @@ class UserSchedule(models.Model):
         verbose_name_plural = 'User schedules'
 
     def __str__(self):
-        return f'Settings for {self.user.get().username}'
+        # return f'Settings for {self.user.get().username}'
+        return f'Settings'
 
     start_time = models.TimeField(default='10:00')
     finish_time = models.TimeField(default='23:00')
@@ -47,7 +48,7 @@ class User(AbstractUser):
         verbose_name_plural = "Users"
 
     def __str__(self):
-        return f'{self.full_name} ({self.username})'
+        return f'{self.full_name} / {self.username}'
 
     telegram_chat_id = models.IntegerField(
         verbose_name='ID Telegram chat', null=True, blank=True
