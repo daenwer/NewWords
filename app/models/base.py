@@ -9,7 +9,7 @@ class UserSchedule(models.Model):
 
     def __str__(self):
         return (
-            f'Settings for {self.user.full_name}'
+            f'Settings for {self.user.full_name or self.user.username}'
             if hasattr(self, 'user') else 'Settings'
         )
 
