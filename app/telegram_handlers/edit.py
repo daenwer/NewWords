@@ -51,7 +51,7 @@ async def edit_command(message: types.Message):
 
     new_phrase = message.text.split('/edit')[1].strip()
 
-    is_allowed = not bool(re.search(r'[^a-zA-Z.,:/!?]', new_phrase))
+    is_allowed = not bool(re.search(r'[^a-zA-Z .,\'":!?-]', new_phrase))
 
     if len(message.text) > 511:
         await message.answer(
@@ -61,7 +61,7 @@ async def edit_command(message: types.Message):
 
     elif not is_allowed:
         await message.answer(
-            'Phrases can only consist of English letters and contain .,:/!?'
+            'Phrases can only consist of English letters and contain .,\'":!?-'
         )
         return
 
