@@ -8,8 +8,10 @@ class UserSchedule(models.Model):
         verbose_name_plural = 'User schedules'
 
     def __str__(self):
-        # return f'Settings for {self.user.get().username}'
-        return f'Settings'
+        return (
+            f'Settings for {self.user.full_name}'
+            if hasattr(self, 'user') else 'Settings'
+        )
 
     start_time = models.TimeField(default='10:00')
     finish_time = models.TimeField(default='23:00')
@@ -53,8 +55,8 @@ class User(AbstractUser):
     telegram_chat_id = models.IntegerField(
         verbose_name='ID Telegram chat', null=True, blank=True
     )
-    user_schedule = models.ForeignKey(
-        UserSchedule, verbose_name='UserSchedule', related_name='user',
+    user_schedule = models.OneToOneField(
+        UserSchedule, verbose_name='User Schedule', related_name='user',
         on_delete=models.CASCADE, null=True, blank=True
     )
     first_name = models.CharField(
@@ -108,7 +110,7 @@ class UserPhrase(models.Model):
         verbose_name_plural = 'User phrases'
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='user'
+        User, on_delete=models.CASCADE, related_name='users'
     )
     base_phrase = models.ForeignKey(
         Phrase, on_delete=models.CASCADE, related_name='phrase'
