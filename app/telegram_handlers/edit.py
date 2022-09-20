@@ -1,22 +1,15 @@
-import os
+import re
 
-from aiogram import types
-from aiogram.utils.exceptions import BotBlocked
 from aiogram.utils.markdown import text, bold
 
-from NewWords.settings import BASE_DIR
-from app.management.commands.bot import bot, dp
-from app.telegram_handlers.send_message import send_message
-from app.telegram_handlers.sync_async import _get_user, _save, update_phrase
+from app.telegram_handlers.sync_async import _get_user, _save, update_phrase, \
+    _get_phrase
 from asyncio import sleep
 
 from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
 
-from app.telegram_handlers.sync_async import (
-    add_new_phrase, _get_user, _save
-)
 from app.management.commands.bot import bot, dp
 
 inline_btn_delete = InlineKeyboardButton('cancel', callback_data='cancel')
@@ -28,6 +21,11 @@ inline_kb_full = InlineKeyboardMarkup(row_width=2).add(
 
 @dp.message_handler(commands=['edit'])
 async def edit_command(message: types.Message):
+
+    user = await _get_user(message.chat.id)
+    if not user:
+        await message.answer('First execute\n/start')
+        return
 
     if not message.reply_to_message:
         return
@@ -45,15 +43,31 @@ async def edit_command(message: types.Message):
     ):
         return
 
+    if not await _get_phrase(old_phrase):
+        await message.answer(
+            "You want to change an entry that doesn't exist!"
+        )
+        return
+
     new_phrase = message.text.split('/edit')[1].strip()
 
-    if len(new_phrase) > 512:
+    is_allowed = not bool(re.search(r'[^a-zA-Z.,:/!?]', new_phrase))
+
+    if len(message.text) > 511:
         await message.answer(
             'The phrase must not be longer than 512 characters!'
         )
+        return
+
+    elif not is_allowed:
+        await message.answer(
+            'Phrases can only consist of English letters and contain .,:/!?'
+        )
+        return
 
     if new_phrase == old_phrase:
         await message.answer('These are the same phrases.')
+        return
 
     disable_user = False
     try:

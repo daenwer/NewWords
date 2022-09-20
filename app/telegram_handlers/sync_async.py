@@ -37,9 +37,9 @@ def _get_or_create_user(message):
 
 @sync_to_async
 def _get_user(chat_id):
-    return User.objects.filter(
-        telegram_chat_id=chat_id, is_active=True
-    ).first()
+    if record := User.objects.filter(telegram_chat_id=chat_id, is_active=True):
+        return record.first()
+    return None
 
 
 @sync_to_async

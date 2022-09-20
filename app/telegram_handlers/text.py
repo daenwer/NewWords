@@ -5,9 +5,8 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
 
-from app.telegram_handlers.sync_async import (
-    add_new_phrase, _get_user, _save
-)
+from app.telegram_handlers.sync_async import add_new_phrase, _get_user, _save
+
 from app.management.commands.bot import bot, dp
 
 inline_btn_delete = InlineKeyboardButton('delete', callback_data='delete')
@@ -19,6 +18,11 @@ inline_kb_full = InlineKeyboardMarkup(row_width=2).add(
 
 @dp.message_handler()
 async def text_command(message: types.Message):
+
+    user = await _get_user(message.chat.id)
+    if not user:
+        await message.answer('First execute\n/start')
+        return
 
     if message.reply_to_message:
         return
