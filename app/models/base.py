@@ -8,10 +8,7 @@ class UserSchedule(models.Model):
         verbose_name_plural = 'User schedules'
 
     def __str__(self):
-        return (
-            f'Settings for {self.user.get().username}'
-            if hasattr(self, 'user_schedule') else 'Settings'
-        )
+        return f'Settings for {self.user.get().username}'
 
     start_time = models.TimeField(default='10:00')
     finish_time = models.TimeField(default='23:00')
