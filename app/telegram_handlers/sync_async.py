@@ -118,10 +118,10 @@ def update_phrase(callback):
 
     if not is_used:
         if not new_app_phrase:
-            old_app_phrase.value = new_app_phrase
+            old_app_phrase.value = new_phrase
             old_app_phrase.pronunciation = None
             old_app_phrase.save()
-            download_pronunciation_task(old_app_phrase.id)
+            # download_pronunciation_task(old_app_phrase.id)
         else:
             user_phrase.base_phrase = new_app_phrase
             user_phrase.save()
@@ -130,4 +130,4 @@ def update_phrase(callback):
         user_phrase.base_phrase = phrase
         user_phrase.save()
         # download_pronunciation_task.delay(phrase.id)
-        download_pronunciation_task(phrase.id)
+        # download_pronunciation_task(phrase.id)

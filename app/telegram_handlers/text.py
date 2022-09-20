@@ -29,7 +29,7 @@ async def text_command(message: types.Message):
 
     text_message = message.text
 
-    is_allowed = not bool(re.search(r'[^a-zA-Z .,\'":!?-]', text_message))
+    is_allowed = not bool(re.search(r"[^a-zA-Z .,':!?-]", text_message))
 
     if len(message.text) < 511 and is_allowed:
         args = (message.chat.id, text_message)
@@ -43,7 +43,7 @@ async def text_command(message: types.Message):
     elif not is_allowed:
         args = (
             message.chat.id,
-            'Phrases can only consist of English letters and contain .,\'":!?-'
+            "Phrases can only consist of English letters and contain .,':!?-"
         )
         kwargs = {}
 
