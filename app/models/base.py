@@ -34,13 +34,13 @@ class UserSchedule(models.Model):
         default=60*60*24*21, verbose_name='Sixth repetition'
     )
     repetition_6 = models.IntegerField(
-        default=60*60*24*90, verbose_name='Seventh repetition'
+        default=60*60*24*60, verbose_name='Seventh repetition'
     )
     repetition_7 = models.IntegerField(
-        default=60*60*24*180, verbose_name='Eighth repetition'
+        default=60*60*24*90, verbose_name='Eighth repetition'
     )
     repetition_8 = models.IntegerField(
-        default=60*60*24*360, verbose_name='Ninth repetition'
+        default=60*60*24*180, verbose_name='Ninth repetition'
     )
 
 
