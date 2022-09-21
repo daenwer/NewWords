@@ -76,12 +76,12 @@ def create_new_celery_task(task_id):
                 start = start_hour + start_minute / 60
                 finish = start + 1
     else:
+        if next_datetime_repeat.date() == lately_today.date():
+            next_datetime_repeat += datetime.timedelta(days=1)
         if next_step_repeat == 1:
             start = start_hour + start_minute / 60
             finish = start + 2
         else:
-            if next_datetime_repeat.date() == lately_today.date():
-                next_datetime_repeat += datetime.timedelta(days=1)
             finish_hour = task.user.user_schedule.finish_time.hour - 1
             finish_minute = task.user.user_schedule.finish_time.minute
             start = start_hour + start_minute / 60
