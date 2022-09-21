@@ -1,4 +1,5 @@
 import datetime
+import random
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -73,7 +74,9 @@ def _create_user_phrase(base_phrase, user):
 def _create_repeat_schedule(user, user_phrase):
     next_repeat = (
         datetime.datetime.now() +
-        datetime.timedelta(seconds=user.user_schedule.repetition_0)
+        datetime.timedelta(
+            seconds=user.user_schedule.repetition_0 + random.randint(-600, 600)
+        )
     )
     repeat_schedule = (True, *user_phrase.repeat_schedule['schedule'][1:])
     user_phrase.repeat_schedule['schedule'] = repeat_schedule
