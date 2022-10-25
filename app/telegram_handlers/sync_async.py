@@ -1,4 +1,5 @@
 import datetime
+import random
 from datetime import timedelta
 
 from asgiref.sync import sync_to_async
@@ -37,9 +38,9 @@ def _get_or_create_user(message):
 
 @sync_to_async
 def _get_user(chat_id):
-    return User.objects.filter(
-        telegram_chat_id=chat_id, is_active=True
-    ).first()
+    if record := User.objects.filter(telegram_chat_id=chat_id, is_active=True):
+        return record.first()
+    return None
 
 
 @sync_to_async
@@ -59,8 +60,8 @@ def _get_user_phrase(record, user):
 @sync_to_async
 def _create_phrase(phrase, user):
     new_phrase = Phrase.objects.create(value=phrase, user=user)
-    download_pronunciation_task.delay(new_phrase.id)
-    # download_pronunciation_task(phrase)
+    # download_pronunciation_task.delay(new_phrase.id)
+    # download_pronunciation_task(new_phrase.id)
     return new_phrase
 
 
@@ -73,7 +74,9 @@ def _create_user_phrase(base_phrase, user):
 def _create_repeat_schedule(user, user_phrase):
     next_repeat = (
         datetime.datetime.now() +
-        datetime.timedelta(seconds=user.user_schedule.repetition_0)
+        datetime.timedelta(
+            seconds=user.user_schedule.repetition_0 + random.randint(-600, 600)
+        )
     )
     repeat_schedule = (True, *user_phrase.repeat_schedule['schedule'][1:])
     user_phrase.repeat_schedule['schedule'] = repeat_schedule
@@ -118,10 +121,10 @@ def update_phrase(callback):
 
     if not is_used:
         if not new_app_phrase:
-            old_app_phrase.value = new_app_phrase
+            old_app_phrase.value = new_phrase
             old_app_phrase.pronunciation = None
             old_app_phrase.save()
-            download_pronunciation_task(old_app_phrase.id)
+            # download_pronunciation_task(old_app_phrase.id)
         else:
             user_phrase.base_phrase = new_app_phrase
             user_phrase.save()
@@ -129,5 +132,5 @@ def update_phrase(callback):
         phrase = Phrase.objects.create(value=new_phrase, user=user)
         user_phrase.base_phrase = phrase
         user_phrase.save()
-        download_pronunciation_task.delay(phrase.id)
-        # download_pronunciation_task(phrase)
+        # download_pronunciation_task.delay(phrase.id)
+        # download_pronunciation_task(phrase.id)

@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import random
 import urllib.request
 
 from NewWords.celery import app
@@ -15,14 +16,16 @@ def create_new_celery_task(task_id):
     if not task.user.is_active:
         return
 
+    if not task.user_phrase.base_phrase.pronunciation:
+        # download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
+        download_pronunciation_task(task.user_phrase.base_phrase.id)
+        task.refresh_from_db()
+
     send_message(
         task.user.telegram_chat_id,
         task.user_phrase.base_phrase.value,
         task.user_phrase.base_phrase.pronunciation
     )
-
-    if not task.user_phrase.base_phrase.pronunciation:
-        download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
 
     try:
         next_step_repeat = (
@@ -55,14 +58,38 @@ def create_new_celery_task(task_id):
         minute=task.user.user_schedule.finish_time.minute
     )
 
+    start_hour = task.user.user_schedule.start_time.hour
+    start_minute = task.user.user_schedule.start_time.minute
+
     if next_datetime_repeat <= lately_today:
-        hour = next_datetime_repeat.hour
-        minute = next_datetime_repeat.minute
+        if next_datetime_repeat.hour <= task.user.user_schedule.start_time.hour:
+            start = start_hour + start_minute / 60
+            finish = start + 2
+        else:
+            if next_datetime_repeat.hour - start_hour > 1:
+                start = (
+                    next_datetime_repeat.hour - 1 +
+                    next_datetime_repeat.minute / 60
+                )
+                finish = start + 1
+            else:
+                start = start_hour + start_minute / 60
+                finish = start + 1
     else:
         if next_datetime_repeat.date() == lately_today.date():
             next_datetime_repeat += datetime.timedelta(days=1)
-        hour = task.user.user_schedule.start_time.hour
-        minute = task.user.user_schedule.start_time.minute
+        if next_step_repeat == 1:
+            start = start_hour + start_minute / 60
+            finish = start + 2
+        else:
+            finish_hour = task.user.user_schedule.finish_time.hour - 1
+            finish_minute = task.user.user_schedule.finish_time.minute
+            start = start_hour + start_minute / 60
+            finish = finish_hour + finish_minute / 60
+
+    alarm = random.uniform(start, finish)
+    hour = int(alarm)
+    minute = int((alarm - hour) * 60)
 
     user_next_datetime_repeat = datetime.datetime(
         year=next_datetime_repeat.year,
