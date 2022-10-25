@@ -1,3 +1,4 @@
+import os
 import re
 from asyncio import sleep
 
@@ -5,7 +6,9 @@ from aiogram import types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
 
-from app.telegram_handlers.sync_async import add_new_phrase, _get_user, _save
+from NewWords.settings import BASE_DIR
+from app.telegram_handlers.sync_async import add_new_phrase, _get_user, _save, \
+    _get_phrase, _download_pronunciation_task
 
 from app.management.commands.bot import bot, dp
 
@@ -85,12 +88,34 @@ async def process_callback_delete(callback_query: types.CallbackQuery):
 
     await bot.answer_callback_query(callback_query.id)
     await add_new_phrase(callback_query)
+    phrase = await _get_phrase(callback_query.message.text)
 
+    disable_user = False
     try:
-        await callback_query.message.delete()
-    except:
-        pass
+        await callback_query.message.delete_reply_markup()
+    except BotBlocked:
+        disable_user = True
 
-    await bot.send_message(
-        callback_query.from_user.id, f'Added -> {callback_query.message.text}'
-    )
+    if disable_user:
+        user = await _get_user(callback_query.message.chat.id)
+        user.is_active = False
+        await _save(user)
+        return
+
+    await _download_pronunciation_task(phrase.id)
+    # await sleep(3)
+    phrase = await _get_phrase(phrase.value)
+    await callback_query.message.delete()
+    if phrase.pronunciation:
+        path = os.path.join(
+            BASE_DIR, 'app', 'static', 'audio', phrase.pronunciation
+        )
+        await bot.send_voice(
+            chat_id=callback_query.message.chat.id,
+            voice=open(path, 'rb'), caption=phrase.value,
+        )
+    else:
+        await bot.send_message(
+            callback_query.from_user.id,
+            f'Added -> {callback_query.message.text}'
+        )

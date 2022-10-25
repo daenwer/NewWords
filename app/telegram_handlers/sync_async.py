@@ -6,12 +6,12 @@ from asgiref.sync import sync_to_async
 
 from app.models import User
 from app.models.base import Phrase, UserPhrase, UserSchedule, RepeatSchedule
-from app.tasks import create_new_celery_task
+from app.tasks import create_new_celery_task, download_pronunciation_task
 
 
 @sync_to_async
-def _save(user):
-    user.save()
+def _save(obj):
+    obj.save()
 
 
 @sync_to_async
@@ -149,6 +149,11 @@ def _get_phrase(phrase):
     if record := Phrase.objects.filter(value=phrase):
         return record.first()
     return None
+
+
+@sync_to_async
+def _download_pronunciation_task(*args):
+    download_pronunciation_task(*args)
 
 
 @sync_to_async
