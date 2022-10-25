@@ -1,9 +1,14 @@
 import os.path
 
-from aiogram import Bot
+from aiogram import Bot, types
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from asgiref.sync import async_to_sync
 
 from NewWords.settings import TELEGRAM_TOKEN, BASE_DIR
+from app.management.commands.bot import dp
+
+inline_btn_add = InlineKeyboardButton('next', callback_data='next')
+inline_kb_full = InlineKeyboardMarkup(row_width=1).add(inline_btn_add)
 
 
 @async_to_sync
@@ -14,7 +19,8 @@ async def send_message(channel_id: int, text: str, audio_path: str):
         if audio_path:
             path = os.path.join(BASE_DIR, 'app', 'static', 'audio', audio_path)
             await bot.send_voice(
-                chat_id=channel_id, voice=open(path, 'rb'), caption=text
+                chat_id=channel_id, voice=open(path, 'rb'), caption=text,
+                reply_markup=inline_kb_full
             )
         else:
             await bot.send_message(chat_id=channel_id, text=text)
@@ -25,3 +31,17 @@ async def send_message(channel_id: int, text: str, audio_path: str):
         await _save(user)
     session = await bot.get_session()
     await session.close()
+
+
+@dp.callback_query_handler(lambda c: c.data == 'next')
+async def process_callback_delete(callback_query: types.CallbackQuery):
+    from app.telegram_handlers.sync_async import (
+        _send_next_phrase, _set_next_repeat_current_task
+    )
+
+    try:
+        await callback_query.message.delete_reply_markup()
+        await _set_next_repeat_current_task(callback_query.message)
+        await _send_next_phrase(callback_query.message.chat.id)
+    except:
+        pass

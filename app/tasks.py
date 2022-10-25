@@ -1,6 +1,4 @@
-import datetime
 import os.path
-import random
 import urllib.request
 
 from NewWords.celery import app
@@ -17,7 +15,6 @@ def create_new_celery_task(task_id):
         return
 
     if not task.user_phrase.base_phrase.pronunciation:
-        # download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
         download_pronunciation_task(task.user_phrase.base_phrase.id)
         task.refresh_from_db()
 
@@ -27,79 +24,8 @@ def create_new_celery_task(task_id):
         task.user_phrase.base_phrase.pronunciation
     )
 
-    try:
-        next_step_repeat = (
-            task.user_phrase.repeat_schedule['schedule'].index(False)
-        )
-    except ValueError:
-        next_step_repeat = None
-
-    if not next_step_repeat:
-        task.is_active = False
-        task.save()
-        return
-
-    # TODO: может удалять вместо остановки?
-    task.user_phrase.repeat_schedule['schedule'][next_step_repeat] = True
-    task.user_phrase.save()
-
-    next_time_interval = task.user.user_schedule.__getattribute__(
-        f'repetition_{next_step_repeat}'
-    )
-    current_datetime = datetime.datetime.now()
-    next_datetime_repeat = (
-        current_datetime + datetime.timedelta(seconds=next_time_interval)
-    )
-    lately_today = datetime.datetime(
-        year=current_datetime.year,
-        month=current_datetime.month,
-        day=current_datetime.day,
-        hour=task.user.user_schedule.finish_time.hour,
-        minute=task.user.user_schedule.finish_time.minute
-    )
-
-    start_hour = task.user.user_schedule.start_time.hour
-    start_minute = task.user.user_schedule.start_time.minute
-
-    if next_datetime_repeat <= lately_today:
-        if next_datetime_repeat.hour <= task.user.user_schedule.start_time.hour:
-            start = start_hour + start_minute / 60
-            finish = start + 2
-        else:
-            if next_datetime_repeat.hour - start_hour > 1:
-                start = (
-                    next_datetime_repeat.hour - 1 +
-                    next_datetime_repeat.minute / 60
-                )
-                finish = start + 1
-            else:
-                start = start_hour + start_minute / 60
-                finish = start + 1
-    else:
-        if next_datetime_repeat.date() == lately_today.date():
-            next_datetime_repeat += datetime.timedelta(days=1)
-        if next_step_repeat == 1:
-            start = start_hour + start_minute / 60
-            finish = start + 2
-        else:
-            finish_hour = task.user.user_schedule.finish_time.hour - 1
-            finish_minute = task.user.user_schedule.finish_time.minute
-            start = start_hour + start_minute / 60
-            finish = finish_hour + finish_minute / 60
-
-    alarm = random.uniform(start, finish)
-    hour = int(alarm)
-    minute = int((alarm - hour) * 60)
-
-    user_next_datetime_repeat = datetime.datetime(
-        year=next_datetime_repeat.year,
-        month=next_datetime_repeat.month,
-        day=next_datetime_repeat.day,
-        hour=hour,
-        minute=minute,
-    )
-    task.next_repeat = user_next_datetime_repeat
-    task.save()
+    task.user.user_schedule.send_on_schedule = False
+    task.user.user_schedule.save()
 
 
 @app.task

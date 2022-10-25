@@ -42,6 +42,7 @@ class UserSchedule(models.Model):
     repetition_8 = models.IntegerField(
         default=60*60*24*180, verbose_name='Ninth repetition'
     )
+    send_on_schedule = models.BooleanField(default=True)
 
 
 class User(AbstractUser):
@@ -127,6 +128,7 @@ class RepeatSchedule(models.Model):
     class Meta:
         verbose_name = 'Repeat schedule'
         verbose_name_plural = 'Repeat scheduler'
+        ordering = ['next_repeat']
 
     next_repeat = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(

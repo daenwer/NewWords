@@ -6,7 +6,7 @@ from asgiref.sync import sync_to_async
 
 from app.models import User
 from app.models.base import Phrase, UserPhrase, UserSchedule, RepeatSchedule
-from app.tasks import download_pronunciation_task
+from app.tasks import create_new_celery_task
 
 
 @sync_to_async
@@ -44,6 +44,107 @@ def _get_user(chat_id):
 
 
 @sync_to_async
+def _send_next_phrase(chat_id):
+    current_datetime = datetime.datetime.now()
+    user = User.objects.filter(telegram_chat_id=chat_id, is_active=True).first()
+    next_tasks = RepeatSchedule.objects.filter(
+        user=user, is_active=True, next_repeat__lte=current_datetime
+    ).order_by('next_repeat').first()
+    if next_tasks:
+        create_new_celery_task(next_tasks.id)
+    else:
+        user.user_schedule.send_on_schedule = True
+        user.user_schedule.save()
+
+
+@sync_to_async
+def _set_next_repeat_current_task(message):
+    user = User.objects.filter(
+        telegram_chat_id=message.chat.id, is_active=True
+    ).first()
+    phrase = message.caption
+    user_phrase = UserPhrase.objects.filter(
+        user=user, base_phrase__value=phrase
+    ).first()
+    task = RepeatSchedule.objects.filter(
+        user_phrase=user_phrase, user=user
+    ).first()
+
+    try:
+        next_step_repeat = (
+            task.user_phrase.repeat_schedule['schedule'].index(False)
+        )
+    except ValueError:
+        next_step_repeat = None
+
+    if not next_step_repeat:
+        task.is_active = False
+        task.save()
+        return
+
+    task.user_phrase.repeat_schedule['schedule'][next_step_repeat] = True
+    task.user_phrase.save()
+
+    next_time_interval = task.user.user_schedule.__getattribute__(
+        f'repetition_{next_step_repeat}'
+    )
+    current_datetime = datetime.datetime.now()
+    next_datetime_repeat = (
+        current_datetime + datetime.timedelta(seconds=next_time_interval)
+    )
+    lately_today = datetime.datetime(
+        year=current_datetime.year,
+        month=current_datetime.month,
+        day=current_datetime.day,
+        hour=task.user.user_schedule.finish_time.hour,
+        minute=task.user.user_schedule.finish_time.minute
+    )
+
+    start_hour = task.user.user_schedule.start_time.hour
+    start_minute = task.user.user_schedule.start_time.minute
+
+    if next_datetime_repeat <= lately_today:
+        if next_datetime_repeat.hour <= task.user.user_schedule.start_time.hour:
+            start = start_hour + start_minute / 60
+            finish = start + 2
+        else:
+            if next_datetime_repeat.hour - start_hour > 1:
+                start = (
+                    next_datetime_repeat.hour - 1 +
+                    next_datetime_repeat.minute / 60
+                )
+                finish = start + 1
+            else:
+                start = start_hour + start_minute / 60
+                finish = start + 1
+    else:
+        if next_datetime_repeat.date() == lately_today.date():
+            next_datetime_repeat += datetime.timedelta(days=1)
+        if next_step_repeat == 1:
+            start = start_hour + start_minute / 60
+            finish = start + 2
+        else:
+            finish_hour = task.user.user_schedule.finish_time.hour - 1
+            finish_minute = task.user.user_schedule.finish_time.minute
+            start = start_hour + start_minute / 60
+            finish = finish_hour + finish_minute / 60
+
+    alarm = random.uniform(start, finish)
+    hour = int(alarm)
+    minute = int((alarm - hour) * 60)
+
+    user_next_datetime_repeat = datetime.datetime(
+        year=next_datetime_repeat.year,
+        month=next_datetime_repeat.month,
+        day=next_datetime_repeat.day,
+        hour=hour,
+        minute=minute,
+    )
+    task.next_repeat = user_next_datetime_repeat
+    task.save()
+
+
+@sync_to_async
 def _get_phrase(phrase):
     if record := Phrase.objects.filter(value=phrase):
         return record.first()
@@ -60,8 +161,6 @@ def _get_user_phrase(record, user):
 @sync_to_async
 def _create_phrase(phrase, user):
     new_phrase = Phrase.objects.create(value=phrase, user=user)
-    # download_pronunciation_task.delay(new_phrase.id)
-    # download_pronunciation_task(new_phrase.id)
     return new_phrase
 
 
