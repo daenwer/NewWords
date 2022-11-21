@@ -3,8 +3,9 @@ import re
 from asyncio import sleep
 
 from aiogram import types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from aiogram.utils.exceptions import BotBlocked, MessageToDeleteNotFound
+from aiogram.utils.markdown import bold, text
 
 from NewWords.settings import BASE_DIR
 from app.telegram_handlers.sync_async import add_new_phrase, _get_user, _save, \
@@ -114,10 +115,25 @@ async def process_callback_delete(callback_query: types.CallbackQuery):
         )
         await bot.send_voice(
             chat_id=callback_query.message.chat.id,
-            voice=open(path, 'rb'), caption=phrase.value,
+            voice=open(path, 'rb'), caption=get_prepared_phrase(phrase.value),
+            parse_mode=ParseMode.MARKDOWN
         )
     else:
         await bot.send_message(
             callback_query.from_user.id,
-            f'Added -> {callback_query.message.text}'
+            f'Added -> {get_prepared_phrase(callback_query.message.text)}',
+            parse_mode=ParseMode.MARKDOWN
         )
+
+
+def get_prepared_phrase(message: str):
+    prepared_text = message.split('*')
+    if len(prepared_text) > 2:
+        message = ''
+        for step, part_phrase in enumerate(prepared_text, 1):
+            if step % 2:
+                message = message + part_phrase
+            else:
+                message = message + bold(part_phrase)
+        message = text(message)
+    return message

@@ -63,6 +63,18 @@ def _set_next_repeat_current_task(message):
         telegram_chat_id=message.chat.id, is_active=True
     ).first()
     phrase = message.caption
+    caption_entities = message.values.get('caption_entities')
+    caption_entities.reverse()
+    if caption_entities:
+        for step in caption_entities:
+            new_phrase = (
+                phrase[:(step.offset + step.length)] + '*' +
+                phrase[(step.offset + step.length):]
+            )
+            new_phrase = (
+                new_phrase[:step.offset] + '*' + new_phrase[step.offset:]
+            )
+            phrase = new_phrase
     user_phrase = UserPhrase.objects.filter(
         user=user, base_phrase__value=phrase
     ).first()
