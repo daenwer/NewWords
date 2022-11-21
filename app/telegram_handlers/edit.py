@@ -51,7 +51,7 @@ async def edit_command(message: types.Message):
 
     new_phrase = message.text.split('/edit')[1].strip()
 
-    is_allowed = not bool(re.search(r"[^a-zA-Z .,':!?-]", new_phrase))
+    is_allowed = not bool(re.search(r"[^a-zA-Z )(///n//t.,*':!?-]", new_phrase))
 
     if len(message.text) > 511:
         await message.answer(
