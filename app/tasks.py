@@ -35,7 +35,7 @@ def download_pronunciation_task(phrase_id):
         return
 
     try:
-        text = phrase.value.replace('*', '').replace(' ', '%20')
+        text = phrase.value.replace(' ', '%20')
         # USA - 0; UK - 1
         url = f'http://dict.youdao.com/dictvoice?type=0&audio={text}'
         file_path = os.path.join(

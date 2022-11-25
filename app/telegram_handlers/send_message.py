@@ -1,7 +1,7 @@
 import os.path
 
 from aiogram import Bot, types
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from asgiref.sync import async_to_sync
 
 from NewWords.settings import TELEGRAM_TOKEN, BASE_DIR
@@ -12,23 +12,18 @@ inline_kb_full = InlineKeyboardMarkup(row_width=1).add(inline_btn_add)
 
 
 @async_to_sync
-async def send_message(channel_id: int, text_message: str, audio_path: str):
-    from app.telegram_handlers.text import get_prepared_phrase
+async def send_message(channel_id: int, text: str, audio_path: str):
     bot = Bot(token=TELEGRAM_TOKEN)
     # TODO: переписать на конкретные ошибки
     try:
         if audio_path:
             path = os.path.join(BASE_DIR, 'app', 'static', 'audio', audio_path)
             await bot.send_voice(
-                chat_id=channel_id, voice=open(path, 'rb'),
-                caption=get_prepared_phrase(text_message),
-                reply_markup=inline_kb_full, parse_mode=ParseMode.MARKDOWN
+                chat_id=channel_id, voice=open(path, 'rb'), caption=text,
+                reply_markup=inline_kb_full
             )
         else:
-            await bot.send_message(
-                chat_id=channel_id, text=get_prepared_phrase(text_message),
-                reply_markup=inline_kb_full, parse_mode=ParseMode.MARKDOWN
-            )
+            await bot.send_message(chat_id=channel_id, text=text)
     except:
         from app.telegram_handlers.sync_async import _get_user, _save
         user = await _get_user(channel_id)
