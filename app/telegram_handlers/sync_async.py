@@ -7,6 +7,7 @@ from asgiref.sync import sync_to_async
 from app.models import User
 from app.models.base import Phrase, UserPhrase, UserSchedule, RepeatSchedule
 from app.tasks import create_new_celery_task, download_pronunciation_task
+from app.telegram_handlers.send_message import send_message
 
 
 @sync_to_async
@@ -54,6 +55,7 @@ def _send_next_phrase(chat_id):
         create_new_celery_task(next_tasks.id)
     else:
         user.user_schedule.send_on_schedule = True
+        user.user_schedule.current_message_id = None
         user.user_schedule.save()
 
 
@@ -149,6 +151,28 @@ def _get_phrase(phrase):
     if record := Phrase.objects.filter(value=phrase):
         return record.first()
     return None
+
+
+@sync_to_async
+def _change_user_schedule(chat_id, send_on_schedule, current_message_id):
+    user = User.objects.filter(telegram_chat_id=chat_id).first()
+    if user:
+        user_schedule = user.user_schedule
+        user_schedule.send_on_schedule = send_on_schedule
+        user_schedule.current_message_id = current_message_id
+        user_schedule.save()
+
+
+@sync_to_async
+def _resend_message(chat_id, phrase, pronunciation):
+    send_message(chat_id, phrase, pronunciation)
+
+
+@sync_to_async
+def _current_message_status_is_active(chat_id, message_id):
+    user = User.objects.filter(telegram_chat_id=chat_id).first()
+    if message_id == user.user_schedule.current_message_id:
+        return True
 
 
 @sync_to_async
