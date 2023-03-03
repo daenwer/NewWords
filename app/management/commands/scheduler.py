@@ -11,15 +11,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         while True:
-            current_datetime = datetime.datetime.now()
             sleep(60)
+            current_datetime = datetime.datetime.now()
 
             if SLEEP_START_TIME < current_datetime.time() < SLEEP_END_TIME:
                 continue
 
             current_tasks = RepeatSchedule.objects.filter(
                 is_active=True, next_repeat__lte=current_datetime
+            ).order_by('user', 'next_repeat').distinct('user').filter(
+                user__user_schedule__send_on_schedule=True
             )
             for task in current_tasks:
-                create_new_celery_task.delay(task.id)
-                # create_new_celery_task(task.id)
+                create_new_celery_task(task.id)

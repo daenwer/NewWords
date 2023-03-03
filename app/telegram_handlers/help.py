@@ -10,6 +10,12 @@ from aiogram.utils.markdown import text, bold, italic, code, pre
 
 @dp.message_handler(commands=['help'])
 async def help_command(message: types.Message):
+
+    user = await _get_user(message.chat.id)
+    if not user:
+        await message.answer('First execute\n/start')
+        return
+
     text_message = text(bold('Список всех команд'),
         bold('/help') + ' - список всех команд',
         bold('New phrase') + ' - для добавления слова или фразы',

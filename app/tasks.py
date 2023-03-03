@@ -1,4 +1,3 @@
-import datetime
 import os.path
 import urllib.request
 
@@ -15,64 +14,18 @@ def create_new_celery_task(task_id):
     if not task.user.is_active:
         return
 
+    if not task.user_phrase.base_phrase.pronunciation:
+        download_pronunciation_task(task.user_phrase.base_phrase.id)
+        task.refresh_from_db()
+
     send_message(
         task.user.telegram_chat_id,
         task.user_phrase.base_phrase.value,
         task.user_phrase.base_phrase.pronunciation
     )
 
-    if not task.user_phrase.base_phrase.pronunciation:
-        download_pronunciation_task.delay(task.user_phrase.base_phrase.id)
-
-    try:
-        next_step_repeat = (
-            task.user_phrase.repeat_schedule['schedule'].index(False)
-        )
-    except ValueError:
-        next_step_repeat = None
-
-    if not next_step_repeat:
-        task.is_active = False
-        task.save()
-        return
-
-    # TODO: может удалять вместо остановки?
-    task.user_phrase.repeat_schedule['schedule'][next_step_repeat] = True
-    task.user_phrase.save()
-
-    next_time_interval = task.user.user_schedule.__getattribute__(
-        f'repetition_{next_step_repeat}'
-    )
-    current_datetime = datetime.datetime.now()
-    next_datetime_repeat = (
-        current_datetime + datetime.timedelta(seconds=next_time_interval)
-    )
-    lately_today = datetime.datetime(
-        year=current_datetime.year,
-        month=current_datetime.month,
-        day=current_datetime.day,
-        hour=task.user.user_schedule.finish_time.hour,
-        minute=task.user.user_schedule.finish_time.minute
-    )
-
-    if next_datetime_repeat <= lately_today:
-        hour = next_datetime_repeat.hour
-        minute = next_datetime_repeat.minute
-    else:
-        if next_datetime_repeat.date() == lately_today.date():
-            next_datetime_repeat += datetime.timedelta(days=1)
-        hour = task.user.user_schedule.start_time.hour
-        minute = task.user.user_schedule.start_time.minute
-
-    user_next_datetime_repeat = datetime.datetime(
-        year=next_datetime_repeat.year,
-        month=next_datetime_repeat.month,
-        day=next_datetime_repeat.day,
-        hour=hour,
-        minute=minute,
-    )
-    task.next_repeat = user_next_datetime_repeat
-    task.save()
+    task.user.user_schedule.send_on_schedule = False
+    task.user.user_schedule.save()
 
 
 @app.task
