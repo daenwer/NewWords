@@ -42,7 +42,11 @@ class UserSchedule(models.Model):
     repetition_8 = models.IntegerField(
         default=60*60*24*180, verbose_name='Ninth repetition'
     )
-    send_on_schedule = models.BooleanField(default=True)
+    send_on_schedule = models.BooleanField(
+        default=True, verbose_name='Send on schedule')
+    current_message_id = models.IntegerField(
+        blank=True, null=True, verbose_name='Current message id'
+    )
 
 
 class User(AbstractUser):

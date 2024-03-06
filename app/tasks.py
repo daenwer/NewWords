@@ -18,14 +18,14 @@ def create_new_celery_task(task_id):
         download_pronunciation_task(task.user_phrase.base_phrase.id)
         task.refresh_from_db()
 
+    task.user.user_schedule.send_on_schedule = False
+    task.user.user_schedule.save()
+
     send_message(
         task.user.telegram_chat_id,
         task.user_phrase.base_phrase.value,
         task.user_phrase.base_phrase.pronunciation
     )
-
-    task.user.user_schedule.send_on_schedule = False
-    task.user.user_schedule.save()
 
 
 @app.task
